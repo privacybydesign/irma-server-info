@@ -7,5 +7,6 @@ USE serverinfo;
 
 CREATE TABLE servers (
   email varchar(255) NOT NULL,
-  version varchar(35) NOT NULL
+  version varchar(35) NOT NULL,
+  UNIQUE (email, version)
 )
