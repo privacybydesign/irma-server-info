@@ -41,18 +41,18 @@ var (
 
 func readConfig(confPath string) {
 	if _, err := os.Stat(confPath); os.IsNotExist(err) {
-		fmt.Println("Error: could not find configuration file: ", confPath)
+		fmt.Println("Error: could not find configuration file:", confPath)
 		fmt.Println("Example configuration file:")
 		buf, err := yaml.Marshal(&conf)
 		if err != nil {
-			log.Fatalln("Couldn't marshal config: ", err)
+			log.Fatalln("Couldn't marshal config:", err)
 		}
 		fmt.Println(buf)
 		return
 	}
 	buf, err := ioutil.ReadFile(confPath)
 	if err != nil {
-		log.Fatalln("Could not read configuration path: ", err)
+		log.Fatalln("Could not read configuration path:", err)
 	}
 	err = yaml.Unmarshal(buf, &conf)
 	if err != nil {
@@ -65,10 +65,10 @@ func connectToDatabase() {
 	db, err = sql.Open(dbDriver,
 		fmt.Sprintf("%s:%s@tcp(%s:3306)/%s", conf.DbUser, conf.DbPass, conf.DbHost, conf.DbName))
 	if err != nil {
-		log.Fatalln("Could not connect to the DB ", err)
+		log.Fatalln("Could not connect to the DB", err)
 	}
 	if err = db.Ping(); err != nil {
-		log.Fatalln("Database could not be pinged: ", err)
+		log.Fatalln("Database could not be pinged:", err)
 	}
 }
 
@@ -82,26 +82,26 @@ func handleServerInfo(w http.ResponseWriter, r *http.Request) {
 	var entry Entry
 	entryBytes, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		log.Println("Error reading received data: ", err)
+		log.Println("Error reading received data:", err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	err = json.Unmarshal(entryBytes, &entry)
 	if err != nil {
-		log.Println("Error parsing received data: ", err)
+		log.Println("Error parsing received data:", err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
 	stmt, err := db.Prepare("INSERT INTO servers (email, version) VALUES (?, ?)")
 	if err != nil {
-		log.Println("Error in statement: ", err)
+		log.Println("Error in statement:", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	_, err = stmt.Exec(entry.Email, entry.Version)
 	if err != nil {
-		log.Println("Failed to store entry: ", err)
+		log.Println("Failed to store entry:", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -120,8 +120,8 @@ func main() {
 
 	http.HandleFunc("/", handleServerInfo)
 
-	log.Println("Listening on port ", conf.Port)
+	log.Println("Listening on port", conf.Port)
 	if err := http.ListenAndServe(fmt.Sprintf(":%s", conf.Port), nil); err != nil {
-		log.Println("Server error: ", err)
+		log.Println("Server error:", err)
 	}
 }
