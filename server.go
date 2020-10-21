@@ -23,8 +23,8 @@ type Conf struct {
 }
 
 type Entry struct {
-	Email   string
-	Version string
+	Email   string `json:"email"`
+	Version string `json:"version"`
 }
 
 var (
