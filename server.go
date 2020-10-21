@@ -15,11 +15,11 @@ import (
 )
 
 type Conf struct {
-	Port   string
-	DbHost string
-	DbUser string
-	DbPass string
-	DbName string
+	Port   string `yaml:"Port"`
+	DbHost string `yaml:"DbHost"`
+	DbUser string `yaml:"DbUser"`
+	DbPass string `yaml:"DbPass"`
+	DbName string `yaml:"DbName"`
 }
 
 type Entry struct {
