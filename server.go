@@ -99,6 +99,13 @@ func handleServerInfo(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+
+	defer func() {
+		if err = stmt.Close(); err != nil {
+			log.Println("Failed to close statement:", err)
+		}
+	}()
+
 	_, err = stmt.Exec(entry.Email, entry.Version)
 	if err != nil {
 		log.Println("Failed to store entry:", err)
