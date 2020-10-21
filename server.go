@@ -118,7 +118,7 @@ func main() {
 	readConfig(confPath)
 	connectToDatabase()
 
-	http.HandleFunc("/serverinfo", handleServerInfo)
+	http.HandleFunc("/", handleServerInfo)
 
 	log.Println("Listening on port ", conf.Port)
 	if err := http.ListenAndServe(fmt.Sprintf(":%s", conf.Port), nil); err != nil {
