@@ -41,20 +41,22 @@ var (
 
 func readConfig(confPath string) {
 	if _, err := os.Stat(confPath); os.IsNotExist(err) {
-		fmt.Printf("Error: could not find configuration file: %s\n", confPath)
-		fmt.Printf("Example configuration file:\n")
-		buf, _ := yaml.Marshal(&conf)
-		fmt.Printf("%s\n", buf)
+		fmt.Println("Error: could not find configuration file: ", confPath)
+		fmt.Println("Example configuration file:")
+		buf, err := yaml.Marshal(&conf)
+		if err != nil {
+			log.Fatalln("Couldn't marshal config: ", err)
+		}
+		fmt.Println(buf)
 		return
-	} else {
-		buf, err := ioutil.ReadFile(confPath)
-		if err != nil {
-			log.Fatalf("Could not read %s: %v", confPath, err)
-		}
-		err = yaml.Unmarshal(buf, &conf)
-		if err != nil {
-			log.Fatalf("Could not parse config files: %v", err)
-		}
+	}
+	buf, err := ioutil.ReadFile(confPath)
+	if err != nil {
+		log.Fatalln("Could not read configuration path: ", err)
+	}
+	err = yaml.Unmarshal(buf, &conf)
+	if err != nil {
+		log.Fatalln("Could not parse config files:", err)
 	}
 }
 
@@ -63,40 +65,44 @@ func connectToDatabase() {
 	db, err = sql.Open(dbDriver,
 		fmt.Sprintf("%s:%s@tcp(%s:3306)/%s", conf.DbUser, conf.DbPass, conf.DbHost, conf.DbName))
 	if err != nil {
-		log.Fatalf("Could not connect to the DB %v", err)
+		log.Fatalln("Could not connect to the DB ", err)
 	}
 	if err = db.Ping(); err != nil {
-		log.Fatalf("Database could not be pinged: %v", err)
+		log.Fatalln("Database could not be pinged: ", err)
 	}
 }
 
 func handleServerInfo(w http.ResponseWriter, r *http.Request) {
 	if r.UserAgent() != "irmaserver" {
 		log.Printf("User-agent %v is not \"irmaserver\"", r.UserAgent())
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
 	var entry Entry
 	entryBytes, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		log.Printf("Error reading received data: %v", err)
+		log.Println("Error reading received data: ", err)
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	err = json.Unmarshal(entryBytes, &entry)
 	if err != nil {
-		log.Printf("Error parsing received data: %v", err)
+		log.Println("Error parsing received data: ", err)
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	stmt, err := db.Prepare("INSERT into servers (email, version) VALUES (?, ?)")
+	stmt, err := db.Prepare("INSERT INTO servers (email, version) VALUES (?, ?)")
 	if err != nil {
-		log.Printf("Error in statement: %v", err)
+		log.Println("Error in statement: ", err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	defer stmt.Close()
 	_, err = stmt.Exec(entry.Email, entry.Version)
 	if err != nil {
-		log.Printf("Failed to store entry: %v", err)
+		log.Println("Failed to store entry: ", err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
@@ -114,8 +120,8 @@ func main() {
 
 	http.HandleFunc("/serverinfo", handleServerInfo)
 
-	log.Printf("Listening on port %s", conf.Port)
+	log.Println("Listening on port ", conf.Port)
 	if err := http.ListenAndServe(fmt.Sprintf(":%s", conf.Port), nil); err != nil {
-		log.Printf("Server error: %v", err)
+		log.Println("Server error: ", err)
 	}
 }
