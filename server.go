@@ -94,6 +94,12 @@ func handleServerInfo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if entry.Email == "" || entry.Version == "" {
+		log.Println("Email or version is empty string")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
 	stmt, err := db.Prepare("INSERT INTO servers (email, version) VALUES (?, ?)")
 	if err != nil {
 		log.Println("Error in statement:", err)
