@@ -75,7 +75,7 @@ func connectToDatabase() {
 
 func handleServerInfo(w http.ResponseWriter, r *http.Request) {
 	if r.UserAgent() != "irmaserver" {
-		log.Printf("User-agent %v is not \"irmaserver\"", r.UserAgent())
+		log.Println("User-agent is not \"irmaserver\", but:", r.UserAgent())
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
