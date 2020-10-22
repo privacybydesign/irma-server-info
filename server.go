@@ -5,13 +5,14 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 
-	_ "github.com/go-sql-driver/mysql"
+	"gopkg.in/yaml.v2"
+
+	"github.com/go-sql-driver/mysql"
 )
 
 type Conf struct {
@@ -108,9 +109,13 @@ func handleServerInfo(w http.ResponseWriter, r *http.Request) {
 
 	_, err = stmt.Exec(entry.Email, entry.Version)
 	if err != nil {
-		log.Println("Failed to store entry:", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+		if driverErr, ok := err.(*mysql.MySQLError); ok && driverErr.Number == 1062 {
+			// (email, version) was not unique, do nothing
+		} else {
+			log.Println("Failed to store entry:", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 	}
 
 	w.WriteHeader(http.StatusOK)
