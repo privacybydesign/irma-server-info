@@ -21,4 +21,4 @@ build:
   script:
     - mkdir -p artifacts
     - go build -a -ldflags '-extldflags "-static"' -o "artifacts/irma_server_info" .
-    - cp db.sql artifact/db.sql
+    - cp db.sql artifacts/db.sql
