@@ -1,4 +1,4 @@
-module github.com/privacybydesign/irma_server_info
+module github.com/privacybydesign/irma-server-info
 
 go 1.14
 
