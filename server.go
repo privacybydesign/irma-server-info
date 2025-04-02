@@ -30,11 +30,11 @@ type Entry struct {
 
 var (
 	conf = Conf{
-		Port:   "8080",
-		DbHost: "localhost",
-		DbUser: "serverinfo",
-		DbPass: "serverinfo",
-		DbName: "serverinfo",
+		Port:   getEnv("PORT", "8080"),
+		DbHost: getEnv("DB_HOST", "localhost"),
+		DbUser: getEnv("DB_USER", "serverinfo"),
+		DbPass: getEnv("DB_PASSWORD", "serverinfo"),
+		DbName: getEnv("DB_NAME", "serverinfo"),
 	}
 	db       *sql.DB
 	dbDriver = "mysql"
@@ -59,6 +59,12 @@ func readConfig(confPath string) {
 	if err != nil {
 		log.Fatalln("Could not parse config files:", err)
 	}
+
+	conf.DbHost = getEnv("DB_HOST", conf.DbHost)
+	conf.DbUser = getEnv("DB_USER", conf.DbUser)
+	conf.DbPass = getEnv("DB_PASSWORD", conf.DbPass)
+	conf.DbName = getEnv("DB_NAME", conf.DbName)
+	conf.Port = getEnv("PORT", conf.Port)
 }
 
 func connectToDatabase() {
@@ -125,6 +131,13 @@ func handleServerInfo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
+}
+
+func getEnv(key, fallback string) string {
+	if value, ok := os.LookupEnv(key); ok {
+		return value
+	}
+	return fallback
 }
 
 func main() {

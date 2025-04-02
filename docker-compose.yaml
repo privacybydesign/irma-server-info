@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: serverinfo
+      MYSQL_USER: serverinfo
+      MYSQL_PASSWORD: serverinfo
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+
+  server:
+    build: .
+    depends_on:
+      - db
+    ports:
+      - "8080:8080"
+    environment:
+      PORT: 8080
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_USER: serverinfo
+      DB_PASSWORD: serverinfo
+      DB_NAME: serverinfo
+    volumes:
+      - .:/app
+      - ./conf.yaml:/root/conf.yaml
+
+volumes:
+  db_data:
