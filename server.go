@@ -12,7 +12,7 @@ import (
 
 	"gopkg.in/yaml.v2"
 
-	"github.com/go-sql-driver/mysql"
+	_ "github.com/lib/pq" // PostgreSQL driver
 )
 
 type Conf struct {
@@ -37,7 +37,7 @@ var (
 		DbName: "serverinfo",
 	}
 	db       *sql.DB
-	dbDriver = "mysql"
+	dbDriver = "postgres"
 )
 
 func readConfig(confPath string) {
@@ -48,7 +48,7 @@ func readConfig(confPath string) {
 		if err != nil {
 			log.Fatalln("Couldn't marshal config:", err)
 		}
-		fmt.Println(buf)
+		fmt.Println(string(buf))
 		return
 	}
 	buf, err := ioutil.ReadFile(confPath)
@@ -63,10 +63,13 @@ func readConfig(confPath string) {
 
 func connectToDatabase() {
 	var err error
-	db, err = sql.Open(dbDriver,
-		fmt.Sprintf("%s:%s@tcp(%s:3306)/%s", conf.DbUser, conf.DbPass, conf.DbHost, conf.DbName))
+	// PostgreSQL DSN: user=username password=password host=hostname dbname=database sslmode=disable
+	dsn := fmt.Sprintf("user=%s password=%s host=%s dbname=%s sslmode=disable",
+		conf.DbUser, conf.DbPass, conf.DbHost, conf.DbName)
+
+	db, err = sql.Open(dbDriver, dsn)
 	if err != nil {
-		log.Fatalln("Could not connect to the DB", err)
+		log.Fatalln("Could not connect to the DB:", err)
 	}
 	if err = db.Ping(); err != nil {
 		log.Fatalln("Database could not be pinged:", err)
@@ -100,7 +103,7 @@ func handleServerInfo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	stmt, err := db.Prepare("INSERT INTO servers (email, version) VALUES (?, ?)")
+	stmt, err := db.Prepare("INSERT INTO servers (email, version) VALUES ($1, $2) ON CONFLICT DO NOTHING")
 	if err != nil {
 		log.Println("Error in statement:", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -115,13 +118,9 @@ func handleServerInfo(w http.ResponseWriter, r *http.Request) {
 
 	_, err = stmt.Exec(entry.Email, entry.Version)
 	if err != nil {
-		if driverErr, ok := err.(*mysql.MySQLError); ok && driverErr.Number == 1062 {
-			// (email, version) was not unique, do nothing
-		} else {
-			log.Println("Failed to store entry:", err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
+		log.Println("Failed to store entry:", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
 	w.WriteHeader(http.StatusOK)
@@ -129,6 +128,9 @@ func handleServerInfo(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	var confPath string
+
+	// Sleep for a minute
+	// time.Sleep(60 * time.Second)
 
 	flag.StringVar(&confPath, "config", "conf.yaml", "path to configuration file")
 	flag.Parse()

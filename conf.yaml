@@ -1,5 +1,0 @@
-Port: 8086
-DbHost: localhost
-DbUser: serverinfo
-DbPass: serverinfo
-DbName: serverinfo
