@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -51,7 +51,7 @@ func readConfig(confPath string) {
 		fmt.Println(string(buf))
 		return
 	}
-	buf, err := ioutil.ReadFile(confPath)
+	buf, err := os.ReadFile(confPath)
 	if err != nil {
 		log.Fatalln("Could not read configuration path:", err)
 	}
@@ -81,7 +81,7 @@ func handleServerInfo(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var entry Entry
-	entryBytes, err := ioutil.ReadAll(r.Body)
+	entryBytes, err := io.ReadAll(r.Body)
 	if err != nil {
 		log.Println("Error reading received data:", err)
 		w.WriteHeader(http.StatusBadRequest)

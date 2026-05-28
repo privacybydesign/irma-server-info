@@ -20,5 +20,6 @@ build:
       - artifacts/*
   script:
     - mkdir -p artifacts
+    - go fix ./...
     - go build -a -ldflags '-extldflags "-static"' -o "artifacts/irma-server-info" .
     - cp db.sql artifacts/db.sql
