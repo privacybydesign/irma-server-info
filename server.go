@@ -48,7 +48,7 @@ func readConfig(confPath string) {
 		if err != nil {
 			log.Fatalln("Couldn't marshal config:", err)
 		}
-		fmt.Println(buf)
+		fmt.Println(string(buf))
 		return
 	}
 	buf, err := ioutil.ReadFile(confPath)
